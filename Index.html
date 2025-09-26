@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournoi Emotes Twitch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d1421 0%, #1a2332 50%, #0f1419 100%);
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/301022884/static/light/2.0') 14 14, auto;
+        }
+
+        /* Curseur personnalisé sur tous les éléments cliquables */
+        button, 
+        .control-button,
+        .participant,
+        .tournament-title,
+        .title-gif-close,
+        .welcome-button,
+        a,
+        input[type="file"],
+        [onclick],
+        .third-place-participant {
+            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/300926816/static/light/1.0'), pointer !important;
+        }
+
+        /* Background decorative elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(45, 122, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(45, 122, 255, 0.15) 0%, transparent 50%),
+                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1900px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 120px;
+            position: relative;
+        }
+
+        .tournament-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #1a2332, #0d1421);
+            border-bottom: 2px solid #2d7aff;
+            padding: 15px 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tournament-info {
+            text-align: center;
+        }
+
+        .tournament-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2d7aff;
+            text-shadow: 0 0 20px rgba(45, 122, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tournament-title:hover {
+            color: #4d8aff;
+            text-shadow: 0 0 30px rgba(77, 138, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        .tournament-subtitle {
+            font-size: 1.1em;
+            color: #888;
+        }
+
+        /* Title GIF Modal */
+        .title-gif-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .title-gif-content {
+            position: relative;
+            background: rgba(26, 35, 50, 0.9);
+            border: 3px solid #2d7aff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .title-gif-image {
+            width: 800px;
+            height: 450px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(45, 122, 255, 0.3);
+        }
+
+        .title-gif-video {
+            width: 800px;
+            height: 450px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(45, 122, 255, 0.3);
+        }
+
+        .title-gif-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .title-gif-close:hover {
+            background: #ff6666;
+            transform: scale(1.1);
+        }
+
+        .title-gif-hint {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #aaa;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Podium */
+        .podium {
+            position: absolute;
+            top: 600px;
+            right: 230px;
+            width: 500px;
+            height: 430px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 4px solid rgba(45, 122, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .podium:hover {
+            border-color: rgba(45, 122, 255, 0.6);
+        }
+
+        .podium-title {
+            text-align: center;
+            font-size: 2em;
+            color: #2d7aff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(45, 122, 255, 0.5);
+        }
+
+        .podium-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+        }
+
+        .podium-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 450px;
+            height: 200px;
+        }
+
+        .podium-step {
+            position: absolute;
+            background: linear-gradient(145deg, #4a90e2, #2d5aa0);
+            border: 2px solid #1e3d72;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-third {
+            left: 0;
+            bottom: 0;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(145deg, #4a90e2, #2d5aa0);
+        }
+
+        .step-first {
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(145deg, #5ba3f5, #4a90e2);
+        }
+
+        .step-second {
+            right: 0;
+            bottom: 0;
+            width: 120px;
+            height: 110px;
+            background: linear-gradient(145deg, #4a90e2, #357abd);
+        }
+
+        .podium-number {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .podium-base-label {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+            color: white;
+            padding: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .podium-places {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: end;
+        }
+
+        .podium-place {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .podium-place.third-place { 
+            left: 25px;
+            bottom: 90px;
+        }
+        
+        .podium-place.first-place { 
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 150px;
+        }
+        
+        .podium-place.second-place { 
+            right: 25px;
+            bottom: 120px;
+        }
+
+        .podium-emote {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 4px solid;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .podium-emote img {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .first { 
+            border-color: #ffd700; 
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.6);
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.3), rgba(0, 0, 0, 0.8));
+        }
+        .second { 
+            border-color: #c0c0c0; 
+            box-shadow: 0 8px 30px rgba(192, 192, 192, 0.6);
+            background: radial-gradient(circle, rgba(192, 192, 192, 0.3), rgba(0, 0, 0, 0.8));
+        }
+        .third { 
+            border-color: #cd7f32; 
+            box-shadow: 0 8px 30px rgba(205, 127, 50, 0.6);
+            background: radial-gradient(circle, rgba(205, 127, 50, 0.3), rgba(0, 0, 0, 0.8));
+        }
+
+        .podium-label {
+            font-size: 1em;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .first .podium-label { color: #ffd700; }
+        .second .podium-label { color: #c0c0c0; }
+        .third .podium-label { color: #cd7f32; }
+
+        /* Tournament bracket */
+        .tournament-bracket {
+            margin-top: 50px;
+            position: relative;
+            display: flex;
+            gap: 60px;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        .round-title {
+            text-align: center;
+            font-size: 1.2em;
+            color: #2d7aff;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .match {
+            margin-bottom: 20px;
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 5px;
+            border: 1px solid rgba(45, 122, 255, 0.3);
+            transition: border-color 0.3s ease;
+        }
+
+        .match:hover {
+            border-color: rgba(45, 122, 255, 0.6);
+        }
+
+        .participant {
+            display: block;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 5px;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .participant:hover {
+            background: rgba(45, 122, 255, 0.1);
+            border-color: rgba(45, 122, 255, 0.5);
+        }
+
+        .participant.winner {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            animation: winnerPulse 2s ease-in-out;
+        }
+
+        .participant.eliminated {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .participant img {
+            width: 28px;
+            height: 28px;
+            border-radius: 3px;
+            object-fit: contain;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        /* Effet de zoom x10 sur les emotes au survol */
+        .participant img:hover {
+            transform: scale(10) translate(7px, 0px);
+            z-index: 1000;
+            position: relative;
+            border: 2px solid #2d7aff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(45, 122, 255, 0.8);
+        }
+
+        .participant-name {
+            font-size: 12px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes winnerPulse {
+            0% { 
+                box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+                transform: scale(1.02);
+            }
+            100% { 
+                box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Animation pour les emotes qui avancent */
+        .advancing-emote {
+            animation: slideInFromLeft 0.6s ease-out;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control-button {
+            background: linear-gradient(135deg, #2d7aff, #1a5ecf);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .control-button:hover {
+            background: linear-gradient(135deg, #4d8aff, #2a6edf);
+            transform: translateY(-2px);
+        }
+
+        /* Third place match */
+        .third-place-match {
+            position: absolute;
+            top: 338px;
+            right: 378px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(45, 122, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            height: 180px;
+            min-width: 200px;
+            z-index: 50;
+        }
+
+        .third-place-title {
+            text-align: center;
+            color: #2d7aff;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .third-place-match .participant {
+            display: flex;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 5px;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 44px;
+            align-items: center;
+            gap: 10px;
+            z-index: 51;
+            pointer-events: all;
+        }
+
+        .third-place-match .participant:hover {
+            background: rgba(45, 122, 255, 0.1);
+            border-color: rgba(45, 122, 255, 0.5);
+        }
+
+        .third-place-match .participant.winner {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            animation: winnerPulse 2s ease-in-out;
+        }
+
+        .third-place-match .participant.eliminated {
+            opacity: 0.5;
+        }
+
+        .third-place-match .participant img {
+            width: 28px;
+            height: 28px;
+            border-radius: 3px;
+            object-fit: contain;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        /* Effet zoom x10 pour le match de 3ème place aussi */
+        .third-place-match .participant img:hover {
+            transform: scale(10);
+            z-index: 1000;
+            position: relative;
+            border: 2px solid #2d7aff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(45, 122, 255, 0.8);
+            pointer-events: all;
+        }
+
+        .third-place-match .participant-name {
+            font-size: 12px;
+            color: #ccc;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* Champion Modal */
+        .champion-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .champion-content {
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .champion-emote {
+            width: 400px;
+            height: 400px;
+            object-fit: contain;
+            border: 5px solid #ffd700;
+            border-radius: 20px;
+            box-shadow: 0 0 100px rgba(255, 215, 0, 0.8);
+            animation: championGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes championGlow {
+            0% { box-shadow: 0 0 100px rgba(255, 215, 0, 0.8); }
+            100% { box-shadow: 0 0 150px rgba(255, 215, 0, 1); }
+        }
+
+        .champion-title {
+            font-size: 4em;
+            color: #ffd700;
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            font-weight: bold;
+        }
+
+        .champion-subtitle {
+            font-size: 1.5em;
+            color: #ccc;
+            margin-top: 30px;
+        }
+
+        .champion-close-hint {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2em;
+            color: #888;
+            opacity: 0.7;
+        }
+
+        /* Welcome Modal */
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .welcome-content {
+            background: linear-gradient(135deg, #1a2332, #0d1421);
+            border: 2px solid #2d7aff;
+            border-radius: 15px;
+            padding: 40px;
+            width: 700px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .welcome-content h2 {
+            color: #2d7aff;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .welcome-content h3 {
+            color: #2d7aff;
+            margin-bottom: 20px;
+            font-size: 4em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .welcome-content p {
+            margin: 15px 0;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+
+        .welcome-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .welcome-button {
+            background: linear-gradient(135deg, #2d7aff, #1a5ecf);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .welcome-button:hover {
+            background: linear-gradient(135deg, #4d8aff, #2a6edf);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 122, 255, 0.4);
+        }
+
+        .welcome-button.secondary {
+            background: linear-gradient(135deg, #666, #444);
+        }
+
+        .welcome-button.secondary:hover {
+            background: linear-gradient(135deg, #777, #555);
+        }
+
+        /* Help Panel */
+        .help-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .help-content {
+            background: linear-gradient(135deg, #1a2332, #0d1421);
+            border: 2px solid #2d7aff;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .help-content h3 {
+            color: #2d7aff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .help-content h4 {
+            color: #4d8aff;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .help-content p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        .help-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        /* Effet d'arrière-plan réactif aux clics */
+body.click-effect::before {
+    background: 
+        radial-gradient(circle at var(--click-x, 50%) var(--click-y, 50%), rgba(45, 122, 255, 0.3) 0%, transparent 30%),
+        radial-gradient(circle at 20% 30%, rgba(45, 122, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(45, 122, 255, 0.15) 0%, transparent 50%),
+        linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+        }
+
+        .click-emote {
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            pointer-events: none;
+            z-index: 2000;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(45, 122, 255, 0.8);
+            animation: clickEmoteFloat 2s ease-out forwards;
+        }
+
+        @keyframes clickEmoteFloat {
+            0% {
+                transform: scale(0) rotate(180deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0.3) rotate(180deg) translateY(-100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tournament-header">
+            <div class="tournament-info">
+                <h1 class="tournament-title" onclick="showTitleGif()">TONEEUW</h1>
+                <p class="tournament-subtitle">Tournoi des Emotes - 64 Emotes</p>
+            </div>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <button class="control-button" onclick="resetTournament()">Reset Tournoi</button>
+                <button class="control-button" onclick="exportResults()">Exporter</button>
+                <button class="control-button" onclick="importResults()">Importer</button>
+                <button class="control-button" onclick="showHelp()">Aide</button>
+            </div>
+        </div>
+
+        <!-- Title GIF Modal -->
+        <div class="title-gif-modal" id="title-gif-modal">
+            <div class="title-gif-content">
+                <button class="title-gif-close" onclick="hideTitleGif()">×</button>
+                <video class="title-gif-video" autoplay loop muted playsinline>
+                    <source src="https://i.imgur.com/S0vPnlP.mp4" type="video/mp4">
+                    <div style="width: 1000px; height: 563px; background: rgba(45, 122, 255, 0.2); display: flex; align-items: center; justify-content: center; color: #2d7aff; font-size: 24px; border-radius: 10px;">
+                        TONEEUW - Vidéo non supportée
+                    </div>
+                </video>
+                <div class="title-gif-hint">Cliquez sur le X ou appuyez sur Échap pour fermer</div>
+            </div>
+        </div>
+
+        <!-- Podium -->
+        <div class="podium">
+            <div class="podium-title">Podium</div>
+            <div class="podium-container">
+                <!-- Base du podium -->
+                <div class="podium-base">
+                    <div class="podium-step step-third">
+                        <div class="podium-number">3</div>
+                    </div>
+                    <div class="podium-step step-first">
+                        <div class="podium-number">1</div>
+                    </div>
+                    <div class="podium-step step-second">
+                        <div class="podium-number">2</div>
+                    </div>
+                    <div class="podium-base-label">Tournoi des Emotes</div>
+                </div>
+                
+                <!-- Emotes sur le podium -->
+                <div class="podium-places">
+                    <div class="podium-place third-place">
+                        <div class="podium-emote third" id="third-place">
+                            <span style="font-size: 24px;">🥉</span>
+                        </div>
+                        <div class="podium-label">3ème</div>
+                    </div>
+                    <div class="podium-place first-place">
+                        <div class="podium-emote first" id="first-place">
+                            <span style="font-size: 32px;">🥇</span>
+                        </div>
+                        <div class="podium-label">Champion</div>
+                    </div>
+                    <div class="podium-place second-place">
+                        <div class="podium-emote second" id="second-place">
+                            <span style="font-size: 28px;">🥈</span>
+                        </div>
+                        <div class="podium-label">2ème</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Third place match -->
+        <div class="third-place-match" id="third-place-container">
+            <div class="third-place-title">Match 3ème place</div>
+            <div class="match" id="third-place-bracket">
+                <div class="participant third-place-participant" data-match="third-place" data-position="0">
+                    <span class="participant-name">Perdant Demi 1</span>
+                </div>
+                <div class="participant third-place-participant" data-match="third-place" data-position="1">
+                    <span class="participant-name">Perdant Demi 2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Bracket -->
+        <div class="tournament-bracket" id="tournament-bracket">
+            <!-- Rounds will be generated by JavaScript -->
+        </div>
+
+        <!-- Hidden file input for import -->
+        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+
+        <!-- Champion Modal -->
+        <div class="champion-modal" id="champion-modal">
+            <div class="champion-content">
+                <div class="champion-title">Champion!</div>
+                <img class="champion-emote" id="champion-emote-display" src="" alt="Champion">
+                <div class="champion-subtitle" id="champion-name-display">Emote Championne</div>
+                <div class="champion-close-hint">Appuyez sur Échap pour fermer</div>
+            </div>
+        </div>
+
+        <!-- Welcome Modal -->
+        <div class="welcome-modal" id="welcome-modal">
+            <div class="welcome-content">
+                <h2>Bravo pour les 1350 subs vous avez débloqué:</h2>
+                <h3><img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_459101742a7c45cc856d2d6964af4eb2/animated/light/3.0" style="width: 56px; height: 56px; vertical-align: middle;"> LA BAGARRE <img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_459101742a7c45cc856d2d6964af4eb2/animated/light/3.0" style="width: 56px; height: 56px; vertical-align: middle;"></h3>
+                <p>Bienvenue dans le tournoi des emotes de la chaine de </p>
+                <p><strong><span style="font-size: 1.5em; color: #4d8aff; text-shadow: 0 0 10px rgba(77, 138, 255, 0.5);">TONE2TWITCHDUREWINDTOP16ZLAN</span></strong></p>
+                <p><img src="https://i.imgur.com/1UziwHJ.png" style="width: 500px; height: 300px; vertical-align: middle;"></p>
+                <p>Les emotes sont réparties aléatoirement dans les matchs de la manche 1</p>
+                <p style="margin-top: 20px; font-size: 0.9em; color: #aaa;">
+                    Tu peux relancer l'attribution aléatoire des emotes en cliquant sur le bouton "Reset Tournoi"
+                </p>
+            </div>
+        </div>
+
+        <!-- Help Panel -->
+        <div class="help-panel" id="help-panel" style="display: none;">
+            <div class="help-content">
+                <h3><img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e6305b39c1249d2a8451cfb4662acf9/static/light/2.0" style="width: 28px; height: 28px; vertical-align: middle;"> Besoin d'aide? <img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e6305b39c1249d2a8451cfb4662acf9/static/light/2.0" style="width: 28px; height: 28px; vertical-align: middle;"></h3>
+                <div class="help-section">
+                    <h4>Utilisation :</h4>
+                    <p><strong>Mode Match :</strong> Clique sur les emotes gagnantes dans chaque match</p>
+                    <p><strong>Survol d'emote :</strong> Passe la souris sur une emote pour l'agrandir x10</p>
+                    <p><strong>Exporter :</strong> Sauvegarde le tournoi dans un fichier JSON</p>
+                    <p><strong>Importer :</strong> Charge un tournoi depuis un fichier JSON exporté</p>
+                    <p><strong>Titre TONEEUW :</strong> Clique sur le titre!</p>
+                </div>
+                <div class="help-section">
+                    <h4>Emotes intégrées :</h4>
+                    <p>Les emotes sont désormais intégrées directement dans le code du tournoi.</p>
+                </div>
+                <div class="help-section">
+                    <h4>Partage :</h4>
+                    <p>Pour partager le tournoi :</p>
+                    <p>1. Exportez le tournoi en cours avec le bouton "Exporter"</p>
+                    <p>2. Envoie le fichier HTML du tournoi et le fichier JSON exporté</p>
+                    <p>3. La personne peut importer le fichier JSON pour reprendre le tournoi où tu l'as laissé</p>
+                </div>
+                <button class="control-button" onclick="hideHelp()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Variables globales pour l'effet de clic
+        let clickCount = 0;
+        let clickTimer = null;
+        let frenzyMode = false;
+        let particleCount = 0;
+        let tournamentData = {};
+        
+        // Default emotes for automatic initialization (add your 64 emotes here)
+        const defaultEmotes = [
+            {"name": "Admin", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_95b1b60b25a54c4fb5579e01016aa341/animated/light/3.0"},
+            {"name": "Bibiche", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e85e6d262d844c4c85a9969d47eb8aa0/static/light/3.0"},
+            {"name": "Cry", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234955/static/light/3.0"},
+            {"name": "DG", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302867537/static/light/3.0"},
+            {"name": "DGRave", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fbcf13fa90d24de6b7071dee5531b73f/animated/light/3.0"},
+            {"name": "DODO", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_708f44ec0c3a42508ebb92d4470ee843/static/light/3.0"},
+            {"name": "Dab", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234939/static/light/3.0"},
+            {"name": "Danse", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e8f7034a2dc247ea83fb328f83d15ef9/animated/light/3.0"},
+            {"name": "Dinde", "image": "https://static-cdn.jtvnw.net/emoticons/v2/305245068/static/light/3.0"},
+            {"name": "DoubleSuper", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/3.0"},
+            {"name": "Fier", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_60f3c2e5ff724003a00833b68e2c183e/static/light/3.0"},
+            {"name": "Flag", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d5aec45eff194aeba447b995bb5ebd39/animated/light/3.0"},
+            {"name": "Fume", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866775/static/light/3.0"},
+            {"name": "GANG", "image": "https://static-cdn.jtvnw.net/emoticons/v2/301526652/static/light/3.0"},
+            {"name": "GRONUTS", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a8e7aed94ead472b8218d114b728b7d5/animated/light/3.0"},
+            {"name": "Gasm", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866790/static/light/3.0"},
+            {"name": "Gasmm", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_85a0a3481c894efebb3dc20a7743926c/static/light/3.0"},
+            {"name": "Gg", "image": "https://static-cdn.jtvnw.net/emoticons/v2/301360051/static/light/3.0"},
+            {"name": "Happy", "image": "https://static-cdn.jtvnw.net/emoticons/v2/301022884/static/light/3.0"},
+            {"name": "Havane", "image": "https://static-cdn.jtvnw.net/emoticons/v2/300926816/static/light/3.0"},
+            {"name": "Kappa", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ac3162dd3374466fbde4f43345e9e060/static/light/3.0"},
+            {"name": "LOL", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c7c737c38e10494c9f84fe8db674ddb0/animated/light/3.0"},
+            {"name": "LUL", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234944/static/light/3.0"},
+            {"name": "Love", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234948/static/light/3.0"},
+            {"name": "MONEY", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_913ce9f0a20b45d8bb5a0280ef3a4a87/static/light/3.0"},
+            {"name": "NoStonks", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13e88e2c9af74140badb3173fcf0618a/static/light/3.0"},
+            {"name": "NotLikeThis", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e6305b39c1249d2a8451cfb4662acf9/static/light/3.0"},
+            {"name": "Note", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_510ac7e8564d4cc5a0b0bf76e8991f47/animated/light/3.0"},
+            {"name": "Party", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_79abb603ca2c45afae72f094c31b463a/animated/light/3.0"},
+            {"name": "Peur", "image": "https://static-cdn.jtvnw.net/emoticons/v2/307664086/static/light/3.0"},
+            {"name": "Pipo", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866823/static/light/3.0"},
+            {"name": "Pog", "image": "https://static-cdn.jtvnw.net/emoticons/v2/301071993/static/light/3.0"},
+            {"name": "Pray", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c03311c9e5464f19a15803bc09aa23b1/static/light/3.0"},
+            {"name": "Quiche", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4064e6fdac8a4b38a2d690f943a81937/animated/light/3.0"},
+            {"name": "RAP", "image": "https://static-cdn.jtvnw.net/emoticons/v2/307664113/static/light/3.0"},
+            {"name": "RIP", "image": "https://static-cdn.jtvnw.net/emoticons/v2/307664097/static/light/3.0"},
+            {"name": "Rage", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234950/static/light/3.0"},
+            {"name": "ST1", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7b466025e4f54aa6ae5ca243acd7d84d/static/light/3.0"},
+            {"name": "SUB", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_89e3a4ec48614a5a8572d92fb8452c57/animated/light/3.0"},
+            {"name": "Stonks", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d26974a7f5ed43be8760f3a4845a9cc3/static/light/3.0"},
+            {"name": "TOP1", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_588766c0c4da485eadeef026d2284c12/static/light/3.0"},
+            {"name": "Thinking", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302234940/static/light/3.0"},
+            {"name": "ThisIsFine", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_459101742a7c45cc856d2d6964af4eb2/animated/light/3.0"},
+            {"name": "Uesh", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4605656b24aa449fae07fe7e8e0ba1f1/animated/light/3.0"},
+            {"name": "UwU", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_be59377a65ca458d8245035abc3a04a7/static/light/3.0"},
+            {"name": "WOOO", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f7fabfebbd4c4d1488e0490f7ec96698/static/light/3.0"},
+            {"name": "ZZZ", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7e3f0d1b322b400bba52500573c7685a/static/light/3.0"},
+            {"name": "HavaneDessin", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866843/static/light/3.0"},
+            {"name": "Hi", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302867542/static/light/3.0"},
+            {"name": "LoveBleu", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c462613d57f24aa9afe468f3bd8a887e/static/light/3.0"},
+            {"name": "Loveblue", "image": "https://static-cdn.jtvnw.net/emoticons/v2/300786581/static/light/3.0"},
+            {"name": "Silver", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866754/static/light/3.0"},
+            {"name": "Gold", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866747/static/light/3.0"},
+            {"name": "KappaGold", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_2ff0d5f8714f48a1af24d4ec860f7137/static/light/3.0"},
+            {"name": "LoveGold", "image": "https://static-cdn.jtvnw.net/emoticons/v2/300786692/static/light/3.0"},
+            {"name": "LoveOr", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fecf7f09b2c1445994a2b2948b96c2fd/static/light/3.0"},
+            {"name": "Viedmamere", "image": "https://static-cdn.jtvnw.net/emoticons/v2/302866872/static/light/3.0"},
+            {"name": "CryOld", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_87b93ceb90584734b0ebfbcf4cf2b9cb/3.0"},
+            {"name": "HiOld", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_8470ab97a0ca4d46a8200e1d93761b73/3.0"},
+            {"name": "LoveOld", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_bf72a3b7d0354e439038c8f65ec2c46f/3.0"},
+            {"name": "CHOKED", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_ab58883ad8d64a189426c683a7513eeb/3.0"},
+            {"name": "Goyave", "image": "https://static-cdn.jtvnw.net/emoticons/v1/305447506/3.0"},
+            {"name": "Gyro", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_24e6cd7fe2de42019c70836ac39379f0/3.0"},
+            {"name": "Petales", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_460e712c20dc430888acb9ff123e3061/3.0"}
+        ];
+        
+        // Tournament structure: 64 → 32 → 16 → 8 → 4 → 2 → 1
+        const roundSizes = [64, 32, 16, 8, 4, 2, 1];
+        const roundNames = ['Premier Tour', 'Deuxième Tour', 'Huitièmes', 'Quarts', 'Demi-finales', 'Finale', 'Gagnant'];
+
+        // Show/Hide Title GIF Modal
+        function showTitleGif() {
+            document.getElementById('title-gif-modal').style.display = 'flex';
+        }
+
+        function hideTitleGif() {
+            document.getElementById('title-gif-modal').style.display = 'none';
+        }
+
+        // Add slide animation to advancing emotes
+        function animateAdvancement(nextParticipant) {
+            nextParticipant.classList.add('advancing-emote');
+            setTimeout(() => {
+                nextParticipant.classList.remove('advancing-emote');
+            }, 600);
+        }
+
+        // Check if tournament is empty (no emotes loaded)
+        function isTournamentEmpty() {
+            for (let matchId in tournamentData) {
+                if (tournamentData[matchId].p0 || tournamentData[matchId].p1) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Show welcome modal on first load
+        function checkWelcomeModal() {
+            const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+            const savedData = localStorage.getItem('tournamentData');
+            
+            // Show welcome if it's the first time OR if tournament is empty
+            if (!hasSeenWelcome || !savedData || Object.keys(JSON.parse(savedData || '{}')).length === 0) {
+                document.getElementById('welcome-modal').style.display = 'flex';
+            }
+        }
+
+        // Start tournament without emotes
+        function startEmptyTournament() {
+            hideWelcomeModal();
+            localStorage.setItem('hasSeenWelcome', 'true');
+        }
+
+        // Trigger emote import from welcome modal (now loads default emotes)
+        function triggerEmoteImport() {
+            hideWelcomeModal();
+            localStorage.setItem('hasSeenWelcome', 'true');
+            if (defaultEmotes.length > 0) {
+                distributeEmotesRandomly(defaultEmotes);
+                alert(`${defaultEmotes.length} emotes chargées et distribuées avec succès !`);
+            }
+        }
+
+        // Hide welcome modal
+        function hideWelcomeModal() {
+            document.getElementById('welcome-modal').style.display = 'none';
+        }
+
+        // Show champion modal
+        function showChampionModal(emoteImg, emoteName) {
+            const modal = document.getElementById('champion-modal');
+            const emoteDisplay = document.getElementById('champion-emote-display');
+            const nameDisplay = document.getElementById('champion-name-display');
+            
+            if (emoteImg && emoteImg.src) {
+                emoteDisplay.src = emoteImg.src;
+                emoteDisplay.alt = emoteName || 'Champion';
+                nameDisplay.textContent = emoteName || 'Emote Championne';
+                modal.style.display = 'flex';
+            }
+        }
+
+        // Hide champion modal
+        function hideChampionModal() {
+            document.getElementById('champion-modal').style.display = 'none';
+        }
+
+        // Third place match winner selection
+        function selectThirdPlaceWinner(position) {
+            console.log('Third place winner function called with position:', position);
+            
+            const match = document.getElementById('third-place-bracket');
+            const participants = match.querySelectorAll('.participant');
+            
+            // Clear previous selections
+            participants.forEach(p => {
+                p.classList.remove('winner', 'eliminated');
+            });
+            
+            // Mark winner and loser
+            participants[position].classList.add('winner');
+            participants[1 - position].classList.add('eliminated');
+            
+            // Update third place on podium
+            const thirdPlaceDiv = document.getElementById('third-place');
+            thirdPlaceDiv.innerHTML = '';
+            const winnerImg = participants[position].querySelector('img');
+            if (winnerImg) {
+                const podiumImg = winnerImg.cloneNode(true);
+                thirdPlaceDiv.appendChild(podiumImg);
+                // Add animation to podium update
+                thirdPlaceDiv.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    thirdPlaceDiv.style.transform = 'scale(1)';
+                }, 300);
+            } else {
+                thirdPlaceDiv.innerHTML = '<span style="font-size: 18px;">🥉</span>';
+            }
+            
+            // Store winner data
+            if (!tournamentData['third-place']) {
+                tournamentData['third-place'] = {};
+            }
+            tournamentData['third-place'].winner = position;
+            localStorage.setItem('tournamentData', JSON.stringify(tournamentData));
+            
+            console.log('Third place winner selected successfully');
+        }
+
+        // Fonctions pour l'effet de clic 
+        function createClickEmote(x, y) {
+            const randomEmote = defaultEmotes[Math.floor(Math.random() * defaultEmotes.length)];
+            
+            const emote = document.createElement('img');
+            emote.className = 'click-emote';
+            emote.src = randomEmote.image;
+            emote.style.left = (x - 32) + 'px';
+            emote.style.top = (y - 32) + 'px';
+            
+            document.body.appendChild(emote);
+            
+            setTimeout(() => {
+                if (emote.parentNode) {
+                    emote.parentNode.removeChild(emote);
+                }
+            }, 2000);
+        }
+
+        function handleBackgroundClick(event) {
+            // Éviter les éléments interactifs (boutons, participants, etc.)
+            if (event.target.matches('button, .participant, .control-button, .tournament-title, .title-gif-close, .welcome-button, a, input, .third-place-participant')) {
+                return;
+            }
+            
+            const x = (event.clientX / window.innerWidth) * 100;
+            const y = (event.clientY / window.innerHeight) * 100;
+            
+            document.body.style.setProperty('--click-x', x + '%');
+            document.body.style.setProperty('--click-y', y + '%');
+            document.body.classList.add('click-effect');
+            
+            setTimeout(() => {
+                document.body.classList.remove('click-effect');
+            }, 1000);
+            
+            createClickEmote(event.pageX, event.pageY);
+        }
+
+        function initializeTournament() {
+            rebuildTournamentDisplay();
+            
+            // Auto-load default emotes if tournament is empty and we have emotes
+            if (isTournamentEmpty() && defaultEmotes.length > 0) {
+                console.log('Auto-loading default emotes...');
+                distributeEmotesRandomly(defaultEmotes);
+            }
+        }
+
+        function getEmoteName(imagePath, customName = null) {
+            if (customName) return customName;
+            if (!imagePath) return '';
+            return '';
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function rebuildTournamentDisplay() {
+            const bracket = document.getElementById('tournament-bracket');
+            bracket.innerHTML = '';
+            
+            // Generate all rounds with preserved data
+            for (let roundIndex = 0; roundIndex < roundSizes.length - 1; roundIndex++) {
+                const roundDiv = document.createElement('div');
+                roundDiv.className = 'round';
+                roundDiv.innerHTML = `<div class="round-title">${roundNames[roundIndex]}</div>`;
+                
+                // Calculate number of matches for this round
+                const matches = roundSizes[roundIndex] / 2;
+                for (let i = 0; i < matches; i++) {
+                    const matchDiv = createMatchWithData(`r${roundIndex}_m${i}`, roundIndex);
+                    roundDiv.appendChild(matchDiv);
+                }
+                
+                bracket.appendChild(roundDiv);
+            }
+            
+            // Winner display
+            const winnerDiv = document.createElement('div');
+            winnerDiv.className = 'round';
+            winnerDiv.innerHTML = `
+                <div class="round-title">Champion</div>
+                <div class="match winner-display" id="champion">
+                    <div class="participant" style="text-align: center; font-size: 1.2em; color: #ffd700;">
+                        <span class="participant-name">En attente...</span>
+                    </div>
+                </div>
+            `;
+            bracket.appendChild(winnerDiv);
+        }
+
+        function createMatchWithData(matchId, roundIndex) {
+            const matchDiv = document.createElement('div');
+            matchDiv.className = 'match';
+            matchDiv.id = matchId;
+            
+            const matchData = tournamentData[matchId] || {};
+            
+            // Create participants
+            for (let pos = 0; pos < 2; pos++) {
+                const participant = document.createElement('div');
+                participant.className = 'participant';
+                participant.dataset.match = matchId;
+                participant.dataset.position = pos;
+                
+                const name = document.createElement('span');
+                name.className = 'participant-name';
+                
+                // Use custom name if available, otherwise show "En attente..."
+                if (matchData[`p${pos}_name`]) {
+                    name.textContent = matchData[`p${pos}_name`];
+                } else {
+                    name.textContent = 'En attente...';
+                }
+                
+                // Add image if data exists
+                if (matchData[`p${pos}`]) {
+                    addImageToParticipant(participant, matchData[`p${pos}`]);
+                }
+                
+                participant.appendChild(name);
+                participant.onclick = function() { selectWinner(matchId, pos); };
+                
+                // Restore winner/eliminated state
+                if (matchData.winner !== undefined) {
+                    if (matchData.winner === pos) {
+                        participant.classList.add('winner');
+                    } else {
+                        participant.classList.add('eliminated');
+                    }
+                }
+                
+                matchDiv.appendChild(participant);
+            }
+            
+            return matchDiv;
+        }
+
+        function addImageToParticipant(participant, imagePath) {
+            const img = document.createElement('img');
+            img.src = imagePath;
+            img.onerror = function() { 
+                console.warn('Impossible de charger l\'image:', imagePath);
+                this.style.display = 'none';
+            };
+            img.onload = function() {
+                console.log('Image chargée:', imagePath);
+            };
+            participant.insertBefore(img, participant.firstChild);
+        }
+
+        function updateParticipant(matchId, position, imagePath) {
+            if (!tournamentData[matchId]) {
+                tournamentData[matchId] = {};
+            }
+            tournamentData[matchId][`p${position}`] = imagePath;
+            
+            // Save to localStorage for persistence
+            localStorage.setItem('tournamentData', JSON.stringify(tournamentData));
+        }
+
+        function selectWinner(matchId, position) {            
+            const match = document.getElementById(matchId);
+            if (!match) return;
+            
+            const participants = match.querySelectorAll('.participant');
+            const winner = participants[position];
+            const loser = participants[1 - position];
+            
+            // Mark winner and loser
+            winner.classList.add('winner');
+            winner.classList.remove('eliminated');
+            loser.classList.add('eliminated');
+            loser.classList.remove('winner');
+            
+            // Store winner data
+            if (!tournamentData[matchId]) {
+                tournamentData[matchId] = {};
+            }
+            tournamentData[matchId].winner = position;
+            
+            // Handle third place match specifically
+            if (matchId === 'third-place') {
+                // Update third place on podium directly
+                const thirdPlaceDiv = document.getElementById('third-place');
+                thirdPlaceDiv.innerHTML = '';
+                const winnerImg = winner.querySelector('img');
+                if (winnerImg) {
+                    const podiumImg = winnerImg.cloneNode(true);
+                    thirdPlaceDiv.appendChild(podiumImg);
+                    // Add animation to podium update
+                    thirdPlaceDiv.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        thirdPlaceDiv.style.transform = 'scale(1)';
+                    }, 300);
+                } else {
+                    thirdPlaceDiv.innerHTML = '<span style="font-size: 18px;">🥉</span>';
+                }
+            } else {
+                // Advance to next round for regular matches
+                advanceWinner(matchId, winner);
+                
+                // Check if this affects third place match
+                if (matchId.includes('r4_m')) {
+                    updateThirdPlaceMatch();
+                }
+                
+                // Special handling for final match (r5_m0) - Show champion modal
+                if (matchId === 'r5_m0') {
+                    const winnerImg = winner.querySelector('img');
+                    const winnerName = winner.querySelector('.participant-name').textContent;
+                    if (winnerImg && winnerImg.src) {
+                        showChampionModal(winnerImg, winnerName);
+                    }
+                }
+                
+                // Check for tournament completion
+                checkTournamentCompletion();
+            }
+            
+            // Save state
+            localStorage.setItem('tournamentData', JSON.stringify(tournamentData));
+        }
+
+        function advanceWinner(fromMatchId, winner) {
+            const roundMatch = fromMatchId.match(/r(\d+)_m(\d+)/);
+            
+            if (!roundMatch) return;
+            
+            const currentRound = parseInt(roundMatch[1]);
+            const matchNumber = parseInt(roundMatch[2]);
+            const nextRound = currentRound + 1;
+            
+            let nextMatch, nextPosition;
+            
+            nextMatch = Math.floor(matchNumber / 2);
+            nextPosition = matchNumber % 2;
+            
+            const nextMatchId = `r${nextRound}_m${nextMatch}`;
+            const nextParticipant = document.querySelector(`[data-match="${nextMatchId}"][data-position="${nextPosition}"]`);
+            
+            if (nextParticipant) {
+                // Copy winner image to next round
+                const winnerImg = winner.querySelector('img');
+                let existingImg = nextParticipant.querySelector('img');
+                
+                if (existingImg) {
+                    existingImg.remove();
+                }
+                
+                if (winnerImg && winnerImg.src) {
+                    const newImg = winnerImg.cloneNode(true);
+                    nextParticipant.insertBefore(newImg, nextParticipant.firstChild);
+                }
+                
+                // Update participant name with emote name
+                const nextName = nextParticipant.querySelector('.participant-name');
+                if (nextName) {
+                    const winnerName = getParticipantName(fromMatchId, winner.dataset.position);
+                    if (winnerName) {
+                        nextName.textContent = winnerName;
+                    } else {
+                        nextName.textContent = `Gagnant ${fromMatchId}`;
+                    }
+                }
+                
+                // Store advancement data
+                const winnerData = getParticipantData(fromMatchId, winner.dataset.position);
+                const winnerName = getParticipantName(fromMatchId, winner.dataset.position);
+                if (winnerData) {
+                    if (!tournamentData[nextMatchId]) {
+                        tournamentData[nextMatchId] = {};
+                    }
+                    tournamentData[nextMatchId][`p${nextPosition}`] = winnerData;
+                    if (winnerName) {
+                        tournamentData[nextMatchId][`p${nextPosition}_name`] = winnerName;
+                    }
+                }
+                
+                // Reset next round participant state
+                nextParticipant.classList.remove('winner', 'eliminated');
+                
+                // Add slide animation
+                animateAdvancement(nextParticipant);
+            }
+        }
+
+        function getParticipantData(matchId, position) {
+            if (tournamentData[matchId] && tournamentData[matchId][`p${position}`]) {
+                return tournamentData[matchId][`p${position}`];
+            }
+            return null;
+        }
+
+        function getParticipantName(matchId, position) {
+            if (tournamentData[matchId] && tournamentData[matchId][`p${position}_name`]) {
+                return tournamentData[matchId][`p${position}_name`];
+            }
+            return null;
+        }
+
+        function updateThirdPlaceMatch() {
+            const semi1 = document.getElementById('r4_m0');
+            const semi2 = document.getElementById('r4_m1');
+            
+            if (semi1 && semi2) {
+                const loser1 = semi1.querySelector('.participant.eliminated');
+                const loser2 = semi2.querySelector('.participant.eliminated');
+                
+                const thirdPlaceMatch = document.getElementById('third-place-bracket');
+                const thirdPlaceParticipants = thirdPlaceMatch.querySelectorAll('.participant');
+                
+                if (loser1) {
+                    copyParticipantData(loser1, thirdPlaceParticipants[0]);
+                    animateAdvancement(thirdPlaceParticipants[0]);
+                }
+                if (loser2) {
+                    copyParticipantData(loser2, thirdPlaceParticipants[1]);
+                    animateAdvancement(thirdPlaceParticipants[1]);
+                }
+            }
+        }
+
+        function copyParticipantData(source, target) {
+            const sourceImg = source.querySelector('img');
+            let targetImg = target.querySelector('img');
+            
+            if (targetImg) {
+                targetImg.remove();
+            }
+            
+            if (sourceImg) {
+                const newImg = sourceImg.cloneNode(true);
+                target.insertBefore(newImg, target.firstChild);
+            }
+            
+            const targetName = target.querySelector('.participant-name');
+            const sourceName = source.querySelector('.participant-name');
+            if (targetName && sourceName) {
+                targetName.textContent = sourceName.textContent;
+            }
+        }
+
+        function checkTournamentCompletion() {
+            const finalMatch = document.getElementById('r5_m0');
+            const winner = finalMatch?.querySelector('.participant.winner');
+            
+            if (winner) {
+                // Update champion display
+                const championDiv = document.getElementById('champion');
+                const championParticipant = championDiv.querySelector('.participant');
+                copyParticipantData(winner, championParticipant);
+                championParticipant.querySelector('.participant-name').textContent = 'Champion !';
+                
+                // Update podium
+                updatePodium();
+            }
+        }
+
+        function updatePodium() {
+            const finalMatch = document.getElementById('r5_m0');
+            const thirdPlaceMatch = document.getElementById('third-place-bracket');
+            
+            const champion = finalMatch?.querySelector('.participant.winner');
+            const runnerUp = finalMatch?.querySelector('.participant.eliminated');
+            const thirdPlace = thirdPlaceMatch?.querySelector('.participant.winner');
+            
+            if (champion) {
+                const firstPlace = document.getElementById('first-place');
+                firstPlace.innerHTML = '';
+                const championImg = champion.querySelector('img');
+                if (championImg) {
+                    const podiumImg = championImg.cloneNode(true);
+                    firstPlace.appendChild(podiumImg);
+                    // Add animation to podium update
+                    firstPlace.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        firstPlace.style.transform = 'scale(1)';
+                    }, 300);
+                } else {
+                    firstPlace.innerHTML = '<span style="font-size: 24px;">🥇</span>';
+                }
+            }
+            
+            if (runnerUp) {
+                const secondPlace = document.getElementById('second-place');
+                secondPlace.innerHTML = '';
+                const runnerUpImg = runnerUp.querySelector('img');
+                if (runnerUpImg) {
+                    const podiumImg = runnerUpImg.cloneNode(true);
+                    secondPlace.appendChild(podiumImg);
+                    // Add animation to podium update
+                    secondPlace.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        secondPlace.style.transform = 'scale(1)';
+                    }, 300);
+                } else {
+                    secondPlace.innerHTML = '<span style="font-size: 20px;">🥈</span>';
+                }
+            }
+            
+            if (thirdPlace) {
+                const thirdPlaceDiv = document.getElementById('third-place');
+                thirdPlaceDiv.innerHTML = '';
+                const thirdImg = thirdPlace.querySelector('img');
+                if (thirdImg) {
+                    const podiumImg = thirdImg.cloneNode(true);
+                    thirdPlaceDiv.appendChild(podiumImg);
+                    // Add animation to podium update
+                    thirdPlaceDiv.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        thirdPlaceDiv.style.transform = 'scale(1)';
+                    }, 300);
+                } else {
+                    thirdPlaceDiv.innerHTML = '<span style="font-size: 18px;">🥉</span>';
+                }
+            }
+        }
+
+        function resetTournament() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser le tournoi ?')) {
+                tournamentData = {};
+                localStorage.removeItem('tournamentData');
+                initializeTournament();
+                
+                // Reset podium with animation
+                const podiumPositions = ['first-place', 'second-place', 'third-place'];
+                const defaultEmojis = ['🥇', '🥈', '🥉'];
+                const sizes = ['24px', '20px', '18px'];
+                
+                podiumPositions.forEach((position, index) => {
+                    const element = document.getElementById(position);
+                    element.style.transform = 'scale(0)';
+                    setTimeout(() => {
+                        element.innerHTML = `<span style="font-size: ${sizes[index]};">${defaultEmojis[index]}</span>`;
+                        element.style.transform = 'scale(1)';
+                    }, 200 + index * 100);
+                });
+                
+                // Reset third place match
+                const thirdPlaceMatch = document.getElementById('third-place-bracket');
+                if (thirdPlaceMatch) {
+                    const participants = thirdPlaceMatch.querySelectorAll('.participant');
+                    participants.forEach((participant, index) => {
+                        // Remove all classes
+                        participant.classList.remove('winner', 'eliminated');
+                        
+                        // Remove any existing images
+                        const existingImg = participant.querySelector('img');
+                        if (existingImg) {
+                            existingImg.remove();
+                        }
+                        
+                        // Reset text to default
+                        const nameSpan = participant.querySelector('.participant-name');
+                        if (nameSpan) {
+                            nameSpan.textContent = `Perdant Demi ${index + 1}`;
+                        }
+                    });
+                }
+                
+                // Hide champion modal if open
+                hideChampionModal();
+            }
+        }
+
+        function exportResults() {
+            const results = {
+                tournamentData: tournamentData,
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'tournament-results.json';
+            link.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function importResults() {
+            const fileInput = document.getElementById('import-file');
+            fileInput.click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.json')) {
+                alert('Veuillez sélectionner un fichier JSON valide.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Validate the imported data structure
+                    if (!importedData.tournamentData) {
+                        throw new Error('Structure de données invalide : tournamentData manquant');
+                    }
+
+                    // Confirm before importing
+                    const confirmMessage = `Êtes-vous sûr de vouloir importer ce tournoi ?\n\nCela remplacera toutes les données actuelles.\n\nFichier: ${file.name}\nDate d'export: ${importedData.timestamp || 'Inconnue'}`;
+                    
+                    if (confirm(confirmMessage)) {
+                        // Import the data
+                        tournamentData = importedData.tournamentData || {};
+
+                        // Save to localStorage
+                        localStorage.setItem('tournamentData', JSON.stringify(tournamentData));
+
+                        // Rebuild the tournament display
+                        rebuildTournamentDisplay();
+                        
+                        // Update podium if tournament is completed
+                        checkTournamentCompletion();
+
+                        alert('Tournoi importé avec succès !');
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de l\'importation:', error);
+                    alert('Erreur lors de l\'importation du fichier.\nVeuillez vérifier que le fichier JSON est valide.\n\nErreur: ' + error.message);
+                }
+            };
+
+            reader.onerror = function() {
+                alert('Erreur lors de la lecture du fichier.');
+            };
+
+            reader.readAsText(file);
+            
+            // Reset the file input so the same file can be imported again if needed
+            event.target.value = '';
+        }
+
+        function distributeEmotesRandomly(emotesData) {
+            // Reset tournament data
+            tournamentData = {};
+
+            // Shuffle emotes randomly
+            const shuffledEmotes = shuffleArray([...emotesData]);
+
+            // Fill the first round (32 matches = 64 spots)
+            const firstRoundEmotes = shuffledEmotes.slice(0, 64);
+            let emoteIndex = 0;
+
+            // Fill first round matches
+            for (let matchIndex = 0; matchIndex < 32 && emoteIndex < firstRoundEmotes.length; matchIndex++) {
+                const matchId = `r0_m${matchIndex}`;
+                if (!tournamentData[matchId]) {
+                    tournamentData[matchId] = {};
+                }
+
+                // Add first emote
+                if (emoteIndex < firstRoundEmotes.length) {
+                    const emote = firstRoundEmotes[emoteIndex];
+                    tournamentData[matchId][`p0`] = emote.image;
+                    tournamentData[matchId][`p0_name`] = emote.name;
+                    emoteIndex++;
+                }
+
+                // Add second emote if available
+                if (emoteIndex < firstRoundEmotes.length) {
+                    const emote = firstRoundEmotes[emoteIndex];
+                    tournamentData[matchId][`p1`] = emote.image;
+                    tournamentData[matchId][`p1_name`] = emote.name;
+                    emoteIndex++;
+                }
+            }
+
+            // Save everything
+            localStorage.setItem('tournamentData', JSON.stringify(tournamentData));
+
+            // Rebuild display
+            rebuildTournamentDisplay();
+        }
+
+        function showHelp() {
+            document.getElementById('help-panel').style.display = 'flex';
+        }
+
+        function hideHelp() {
+            document.getElementById('help-panel').style.display = 'none';
+        }
+
+        // Initialize tournament on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved data if available
+            const savedData = localStorage.getItem('tournamentData');
+            if (savedData) {
+                try {
+                    tournamentData = JSON.parse(savedData);
+                } catch (e) {
+                    console.warn('Failed to load saved tournament data');
+                    tournamentData = {};
+                }
+            }
+            
+            initializeTournament();
+            
+            // Add event delegation for third place match
+            const thirdPlaceContainer = document.getElementById('third-place-container');
+            if (thirdPlaceContainer) {
+                thirdPlaceContainer.addEventListener('click', function(e) {
+                    const participant = e.target.closest('.third-place-participant');
+                    if (participant) {
+                        const position = parseInt(participant.dataset.position);
+                        console.log('Third place click detected, position:', position);
+                        selectThirdPlaceWinner(position);
+                    }
+                });
+            }
+            // ADD THIS LINE HERE:
+            document.body.addEventListener('click', handleBackgroundClick);
+
+            // Show welcome modal if needed
+            checkWelcomeModal();
+        });
+
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('title-gif-modal').style.display === 'flex') {
+                    hideTitleGif();
+                } else if (document.getElementById('champion-modal').style.display === 'flex') {
+                    hideChampionModal();
+                } else if (document.getElementById('help-panel').style.display !== 'none') {
+                    hideHelp();
+                } else if (document.getElementById('welcome-modal').style.display !== 'none') {
+                    hideWelcomeModal();
+                }
+            }
+        });
+
+        // Handle clicks on title GIF modal background to close it
+        document.getElementById('title-gif-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideTitleGif();
+            }
+        });
+    </script>
+</body>
+</html>
