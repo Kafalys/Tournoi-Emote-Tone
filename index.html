@@ -772,6 +772,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: visible;
         }
 
         .help-content {
@@ -783,6 +784,30 @@
             max-height: 80vh;
             overflow-y: auto;
             color: white;
+            position: relative; 
+            overflow: visible;
+        }
+
+        .help-side-image {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 800px;
+            height: 800px;
+            object-fit: contain;
+            opacity: 0.8;
+            border-radius: 15px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .help-side-image.left {
+            left: -600px; /* Position à gauche, en dehors de la fenêtre */
+            transform: translateY(-50%) scaleX(-1); /* Miroir horizontal */
+        }
+
+        .help-side-image.right {
+            right: -600px; /* Position à droite, en dehors de la fenêtre */
         }
 
         .help-content h3 {
@@ -807,6 +832,11 @@
             padding: 15px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
+        }
+
+        .help-content .control-button {
+            display: block;
+            margin: 20px auto 0 auto; /* Centre le bouton horizontalement */
         }
 
         /* Effet d'arrière-plan réactif aux clics */
@@ -1060,7 +1090,7 @@
                 <div class="title-gif-content">
                     <button class="title-gif-close" onclick="hideTitleGif()">×</button>
                     <img class="title-gif-image" src="https://i.imgur.com/45m12D3.png" alt="TONEEUWSAD">
-                    <div class="title-gif-hint">Cliquez sur le X ou appuyez sur Échap pour fermer</div>
+                    <div class="title-gif-hint">Échap pour fermer</div>
                 </div>
             </div>
 
@@ -1074,7 +1104,7 @@
                         Vidéo RP non supportée
                     </div>
                 </video>
-                <div class="rp-video-hint">Cliquez sur le X ou appuyez sur Échap pour fermer</div>
+                <div class="rp-video-hint">Échap pour fermer</div>
             </div>
         </div>
 
@@ -1147,7 +1177,7 @@
                 <div class="champion-title">Champion!</div>
                 <img class="champion-emote" id="champion-emote-display" src="" alt="Champion">
                 <div class="champion-subtitle" id="champion-name-display">Emote Championne</div>
-                <div class="champion-close-hint">Appuyez sur Échap pour fermer</div>
+                <div class="champion-close-hint">Échap pour fermer</div>
             </div>
         </div>
 
@@ -1173,24 +1203,26 @@
         <!-- Help Panel -->
         <div class="help-panel" id="help-panel" style="display: none;">
             <div class="help-content">
+                <img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/TONE E33.png" alt="Aide gauche" class="help-side-image left">
+                <img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/TONE E33.png" alt="Aide droite" class="help-side-image right">
                 <h3><img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e6305b39c1249d2a8451cfb4662acf9/static/light/2.0" style="width: 28px; height: 28px; vertical-align: middle;"> T'as besoin d'aide? <img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e6305b39c1249d2a8451cfb4662acf9/static/light/2.0" style="width: 28px; height: 28px; vertical-align: middle;"></h3>
                 <div class="help-section">
                     <h4>Utilisation :</h4>
                     <p><strong>Mode Match :</strong> Clique sur les emotes gagnantes dans chaque match</p>
-                    <p><strong>Survol d'emote :</strong> Passe la souris sur une emote pour l'agrandir x10</p>
                     <p><strong>Exporter :</strong> Sauvegarde le tournoi dans un fichier JSON</p>
                     <p><strong>Importer :</strong> Charge un tournoi depuis un fichier JSON exporté</p>
-                    <p><strong>Titre TONEEUW :</strong> Clique sur le titre!</p>
                 </div>
                 <div class="help-section">
-                    <h4>Emotes intégrées :</h4>
-                    <p>Les emotes sont désormais intégrées directement dans le code du tournoi.</p>
+                    <h4>Interactions :</h4>
+                    <p>Clique sur "TONEEUW", "C KAN LE RP?" et "TOUTOUYOUTOU"</p>      
+                    <p>Clique sur le fond</p>
+                    <p>Survole les émotes pour les agrandir</p>          
                 </div>
                 <div class="help-section">
                     <h4>Partage :</h4>
                     <p>Pour partager le tournoi :</p>
                     <p>1. Exportez le tournoi en cours avec le bouton "Exporter"</p>
-                    <p>2. Envoie le fichier HTML du tournoi et le fichier JSON exporté</p>
+                    <p>2. Envoie le fichier lien du tournoi et le fichier JSON exporté</p>
                     <p>3. La personne peut importer le fichier JSON pour reprendre le tournoi où tu l'as laissé</p>
                 </div>
                 <button class="control-button" onclick="hideHelp()">Fermer</button>
@@ -1208,7 +1240,7 @@
         let particleCount = 0;
         let tournamentData = {};
         
-        // Default emotes for automatic initialization (add your 64 emotes here)
+        // Liste des emotes par défaut
         const defaultEmotes = [
             {"name": "Admin", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_95b1b60b25a54c4fb5579e01016aa341/animated/light/3.0"},
             {"name": "Bibiche", "image": "https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e85e6d262d844c4c85a9969d47eb8aa0/static/light/3.0"},
