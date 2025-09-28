@@ -101,7 +101,10 @@
         }
         .center-title {
             text-align: center;
-            flex: 1; /* Prend l'espace disponible au centre */
+            flex: 1;
+            display: flex;           
+            align-items: center;    
+            justify-content: center; 
         }
 
         .center-title h2 {
@@ -111,6 +114,21 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             margin: 0;
+            line-height: 1;
+            display: flex;           /* AJOUTER */
+            align-items: center;     /* AJOUTER */
+            justify-content: center; /* AJOUTER */
+            gap: 10px;              /* AJOUTER - Espace entre images et texte */
+        }
+
+        .center-title h2 img {
+            vertical-align: middle; /* AJOUTER */
+            height: 2.5em;          /* AJOUTER - Taille proportionnelle au texte */
+            width: auto;            /* AJOUTER - Garde les proportions */
+        }   
+
+        .center-title h2 img:last-child {
+            transform: scaleX(-1); /* Miroir horizontal de la dernière image */
         }
 
         /* Title GIF Modal */
@@ -1066,7 +1084,7 @@
             </div>
 
             <div class="center-title">
-                <h2 class="clickable-subtitle" onclick="showRPVideo()">C KAN LE RP?</h2>
+                <h2 class="clickable-subtitle" onclick="showRPVideo()"><img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/ToneRPDétour 62x80.png"> C KAN LE RP? <img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/ToneRPDétour 62x80.png"></h2>
             </div>
 
             <!-- Controls -->
@@ -2070,6 +2088,8 @@
             if (e.key === 'Escape') {
                 if (document.getElementById('title-gif-modal').style.display === 'flex') {
                     hideTitleGif();
+                } else if (document.getElementById('rp-video-modal').style.display === 'flex') {
+                    hideRPVideo();
                 } else if (document.getElementById('champion-modal').style.display === 'flex') {
                     hideChampionModal();
                 } else if (document.getElementById('help-panel').style.display !== 'none') {
@@ -2079,7 +2099,7 @@
                 }
             }
         });
-
+        
         // Handle clicks on title GIF modal background to close it
         document.getElementById('title-gif-modal').addEventListener('click', function(e) {
             if (e.target === this) {
