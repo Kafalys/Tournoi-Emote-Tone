@@ -18,7 +18,7 @@
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
-            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/301022884/static/light/2.0') 28 28, auto;
+            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/2.0') 28 28, auto;
         }
 
         /* Curseur personnalisé sur tous les éléments cliquables */
@@ -32,7 +32,7 @@
         input[type="file"],
         [onclick],
         .third-place-participant {
-            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/300926816/static/light/1.0') 14 14, pointer !important;
+            cursor: url('https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/1.0') 14 14, pointer !important;
         }
 
         /* Background decorative elements */
@@ -43,12 +43,14 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(45, 122, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(45, 122, 255, 0.15) 0%, transparent 50%),
-                linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
-            z-index: -1;
-        }
+            background: url('https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/3.0') no-repeat;
+            background-size: cover;
+            background-position: center; 
+            opacity: 0;
+            z-index: -2;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }    
 
         .container {
             width: 100%;
@@ -155,6 +157,14 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
         }
 
+        .title-gif-content p {
+            position: relative;
+            padding: 20px;
+            font-size: 1.8em;
+            color:rgba(45, 122, 255, 0.8) ;
+            text-align: center;
+        }
+
         .title-gif-image {
             width: 800px;
             height: 800px;
@@ -213,7 +223,7 @@
             right: 230px;
             width: 500px;
             height: 430px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.8);
             border: 4px solid rgba(45, 122, 255, 0.3);
             border-radius: 8px;
             padding: 20px;
@@ -413,7 +423,11 @@
             text-align: center;
             font-size: 1.2em;
             color: #2d7aff;
+            background: rgb(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 5px;
             margin-bottom: 20px;
+            border: 1px solid rgba(45, 122, 255, 0.8);
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -421,10 +435,10 @@
         .match {
             margin-bottom: 20px;
             position: relative;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgb(0, 0, 0, 0.8);
             border-radius: 8px;
             padding: 5px;
-            border: 1px solid rgba(45, 122, 255, 0.3);
+            border: 1px solid rgba(45, 122, 255, 0.8);
             transition: border-color 0.3s ease;
         }
 
@@ -877,6 +891,23 @@
             animation: clickEmoteFloat 2s ease-out forwards;
         }
 
+        .click-effect-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1; /* Entre les backgrounds et le contenu */
+            opacity: 0;
+            background: radial-gradient(circle at var(--click-x, 50%) var(--click-y, 50%), rgba(45, 122, 255, 0.3) 0%, transparent 30%);
+            transition: opacity 0.3s ease;
+        }
+
+        .click-effect-overlay.active {
+            opacity: 1;
+        }
+
         /* Container du toggle */
         .toggle-container {
             display: flex;
@@ -964,20 +995,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: url('https://i.imgur.com/GLDYY4d.png') no-repeat center center;
-            background-size: cover;
-            opacity: 0;
-            z-index: -2;
+            background: url('https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/3.0') repeat;
+            background-size: 64px 64px; /* Taille de chaque emote répétée */
+            opacity: 1;
+            z-index: -1;
             pointer-events: none;
             transition: opacity 0.5s ease-in-out;
         }
 
         body.image-background::after {
-            opacity: 1; 
+            opacity: 0; 
         }
 
         body.image-background::before {
-            opacity: 0.5;
+            opacity: 1;
         }
 
         @keyframes clickEmoteFloat {
@@ -1077,6 +1108,7 @@
     </style>
 </head>
 <body>
+    <div class="click-effect-overlay" id="click-effect-overlay"></div>
     <div class="container">
         <div class="tournament-header">
             <div class="tournament-info">
@@ -1084,7 +1116,7 @@
             </div>
 
             <div class="center-title">
-                <h2 class="clickable-subtitle" onclick="showRPVideo()"><img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/ToneRPDétour 62x80.png"> C KAN LE RP? <img src="https://raw.githubusercontent.com/Kafalys/Tournoi-Emote-Tone/main/assets/ToneRPDétour 62x80.png"></h2>
+                <h2 class="clickable-subtitle" onclick="showRPVideo()"><img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/2.0"> #FREEDOUBLESUPER <img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/2.0"></h2>
             </div>
 
             <!-- Controls -->
@@ -1094,7 +1126,7 @@
                 <button class="control-button" onclick="importResults()">Importer</button>
                 <button class="control-button" onclick="showHelp()">Aide</button>
                 <div class="toggle-container">
-                    <span class="toggle-label">TOUTOUYOUTOU</span>
+                    <span class="toggle-label">Fond uni</span>
                     <label class="toggle-switch">
                         <input type="checkbox" id="background-toggle" onchange="toggleBackground()">
                         <span class="slider"></span>
@@ -1108,6 +1140,7 @@
                 <div class="title-gif-content">
                     <button class="title-gif-close" onclick="hideTitleGif()">×</button>
                     <img class="title-gif-image" src="https://i.imgur.com/45m12D3.png" alt="TONEEUWSAD">
+                    <p>Quand Tone apprend que le <img src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/1.0"> a perdu face à l'immonde <img src=https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_24e6cd7fe2de42019c70836ac39379f0/1.0></p>
                     <div class="title-gif-hint">Échap pour fermer</div>
                 </div>
             </div>
@@ -1128,7 +1161,7 @@
 
         <!-- Podium -->
         <div class="podium">
-            <div class="podium-title">Podium</div>
+            <div class="podium-title"><img src=https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/2.0> Podium <img src=https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1a48f8cf505246f0b205799c73829cfb/static/light/2.0></div>
             <div class="podium-container">
                 <!-- Base du podium -->
                 <div class="podium-base">
@@ -1232,7 +1265,7 @@
                 </div>
                 <div class="help-section">
                     <h4>Interactions :</h4>
-                    <p>Clique sur "TONEEUW", "C KAN LE RP?" et "TOUTOUYOUTOU"</p>      
+                    <p>Clique sur "TONEEUW", "C KAN LE RP?" et "Fond uni"</p>      
                     <p>Clique sur le fond</p>
                     <p>Survole les émotes pour les agrandir</p>          
                 </div>
@@ -1246,7 +1279,6 @@
                 <button class="control-button" onclick="hideHelp()">Fermer</button>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -1322,7 +1354,7 @@
             {"name": "LoveOld", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_bf72a3b7d0354e439038c8f65ec2c46f/3.0"},
             {"name": "CHOKED", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_ab58883ad8d64a189426c683a7513eeb/3.0"},
             {"name": "Goyave", "image": "https://static-cdn.jtvnw.net/emoticons/v1/305447506/3.0"},
-            {"name": "Gyro", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_24e6cd7fe2de42019c70836ac39379f0/3.0"},
+            {"name": "GYRO LA FRAUDE", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_24e6cd7fe2de42019c70836ac39379f0/3.0"},
             {"name": "Petales", "image": "https://static-cdn.jtvnw.net/emoticons/v1/emotesv2_460e712c20dc430888acb9ff123e3061/3.0"}
         ];
         
@@ -1478,14 +1510,14 @@
             const x = (event.clientX / window.innerWidth) * 100;
             const y = (event.clientY / window.innerHeight) * 100;
             
-            document.body.style.setProperty('--click-x', x + '%');
-            document.body.style.setProperty('--click-y', y + '%');
-            document.body.classList.add('click-effect');
+            // Utiliser l'overlay au lieu de body::before
+            const overlay = document.getElementById('click-effect-overlay');
+            overlay.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(45, 122, 255, 0.3) 0%, transparent 30%)`;
+            overlay.classList.add('active');
             
             setTimeout(() => {
-                document.body.classList.remove('click-effect');
-            }, 1000);
-            
+                overlay.classList.remove('active');
+            }, 1000);            
             createClickEmote(event.pageX, event.pageY);
         }
 
